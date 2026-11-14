@@ -48,6 +48,7 @@ const browser = await puppeteer.launch({
 });
 const page = await browser.newPage();
 await page.setViewport({ width: 960, height: 540, deviceScaleFactor: 2 });   // same CSS viewport as the TV
+if (process.env.TIMEZONE) await page.emulateTimezone(process.env.TIMEZONE);   // e.g. Australia/Perth; runners are UTC
 await page.evaluateOnNewDocument(VIRTUAL_TIME);
 page.on('pageerror', e => console.error('page error:', e.message));
 await page.goto(pathToFileURL(page_).href, { waitUntil: 'networkidle0', timeout: 60000 });
