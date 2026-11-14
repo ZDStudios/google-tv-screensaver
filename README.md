@@ -12,6 +12,12 @@ The screensaver page for the Lumen launcher on the Chromecast. Lumen shows
 
 ## Live page or video?
 
+When the page is too slow for the TV, Lumen plays the rendered video (canvas only) and shows the
+page's normal HTML on top of it, live, with the canvas and requestAnimationFrame switched off.
+So clocks and countdowns stay correct while the heavy scene comes from the video. No manual work
+is needed after a push.
+
+
 The TV plays the page live, measures its frame rate once per version, and if it's
 below 20 fps it crossfades to the rendered video (hardware-decoded, always smooth).
 The video is only used when it was rendered from the exact same `index.html` bytes.

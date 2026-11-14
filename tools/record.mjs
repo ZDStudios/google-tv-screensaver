@@ -53,6 +53,10 @@ await page.evaluateOnNewDocument(VIRTUAL_TIME);
 page.on('pageerror', e => console.error('page error:', e.message));
 await page.goto(pathToFileURL(page_).href, { waitUntil: 'networkidle0', timeout: 60000 });
 
+// The video carries only the canvas/WebGL scene; the TV overlays the page's live DOM (clocks,
+// countdowns, text) on top of it, so hide everything else while recording.
+if (process.env.HIDE_DOM !== '0') await page.addStyleTag({ content:
+  'body *:not(canvas){visibility:hidden!important} canvas{visibility:visible!important}' });
 const step = 1000 / FPS;
 for (let i = 0; i < WARMUP * FPS; i++) await page.evaluate(d => window.__advance(d), step);
 
