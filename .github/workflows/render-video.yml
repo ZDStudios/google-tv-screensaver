@@ -1,0 +1,47 @@
+# Every push to main re-renders index.html into a looping video (out/loop.mp4) and publishes it,
+# with meta.json, to the single-commit `screensaver-video` branch. The Lumen TV app plays that
+# video instead of the live page whenever the live page can't run smoothly on the TV.
+name: Render screensaver video
+
+on:
+  push:
+    branches: [main]
+    paths: ['index.html', 'tools/record.mjs', '.github/workflows/render-video.yml', '**/*.js', '**/*.css', '**/*.png', '**/*.jpg', '**/*.svg']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: render-video
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install ffmpeg + puppeteer
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          npm install --no-save --no-audit --no-fund puppeteer@23
+      - name: Render loop
+        run: node tools/record.mjs
+        env:
+          LOOP_SECONDS: 60
+          FADE_SECONDS: 2
+          FPS: 30
+      - name: Publish to screensaver-video branch
+        run: |
+          cd out
+          rm -f raw.mp4
+          git init -q
+          git checkout -q -b screensaver-video
+          git add loop.mp4 meta.json
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Rendered loop for ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" screensaver-video
